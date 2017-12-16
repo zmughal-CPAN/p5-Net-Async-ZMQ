@@ -4,62 +4,48 @@ package Net::Async::ZMQ;
 use strict;
 use warnings;
 
-use Package::Stash;
-use ZMQ::Constants qw(ZMQ_FD);
-use Fcntl qw(O_RDONLY);
-use if $^O eq 'MSWin32', 'Win32API::File' => qw(OsFHandleOpenFd);
-
-use IO::Async::Handle;
-
-sub new {
-	my ($class, %args) = @_;
-
-	my $socket = delete $args{socket};
-	my $io_handle = _zmq_get_io_handle($socket);
-
-	my $handle =  IO::Async::Handle->new(
-		read_handle => $io_handle,
-		%args,
-	);
-
-	return $handle;
-}
-
-sub _zmq_get_io_handle {
-	my ($socket) = @_;
-
-	my $zmq_libzmq_class;
-	if( $socket->isa('ZMQ::LibZMQ3::Socket') ) {
-		$zmq_libzmq_class = 'ZMQ::LibZMQ3';
-	} elsif( $socket->isa('ZMQ::LibZMQ4::Socket') ) {
-		$zmq_libzmq_class = 'ZMQ::LibZMQ4';
-	} else {
-		die "Unknown ZMQ socket: $socket";
-	}
-
-	my $stash = Package::Stash->new($zmq_libzmq_class);
-	my $zmq_getsockopt = $stash->get_symbol('&zmq_getsockopt');
-	my $zmq_getsockopt_uint64 = $stash->get_symbol('&zmq_getsockopt_uint64');
-
-	my $fd;
-
-	if( $^O eq 'MSWin32' ) {
-		# `SOCKET` data type is a `uint64` on Windows x64.
-		my $socket_handle = $zmq_getsockopt_uint64->( $socket, ZMQ_FD );
-		# Converts OS socket handle to a C runtime file descriptor.
-		$fd = OsFHandleOpenFd($socket_handle, O_RDONLY);
-	} else {
-		$fd = $zmq_getsockopt->( $socket, ZMQ_FD );
-	}
-
-	# Use dup() on the ZMQ file descriptor so that Perl can close the
-	# handle without closing the ZMQ handle.
-	#
-	# Also, avoid using IO::Handle here due to how it closes the file
-	# handle automatically.
-	open(my $io_handle, "<&", $fd);
-
-	$io_handle;
-}
+use base qw( IO::Async::Notifier );
 
 1;
+__END__
+=head1 SYNOPSIS
+
+  use IO::Async::Loop;
+  use Net::Async::ZMQ;
+  use Net::Async::ZMQ::Socket;
+
+  use ZMQ::LibZMQ3;  # or ZMQ::LibZMQ4
+  use ZMQ::Constants qw(ZMQ_REQ ZMQ_NOBLOCK);
+
+  my $loop = IO::Async::Loop->new;
+
+  my $ctx = zmq_init();
+  my $client_socket = zmq_socket( $ctx, ZMQ_REQ );
+  zmq_connect( $client_socket, "tcp://127.0.0.1:9999" );
+
+  my $counter = 0;
+
+  my $zmq = Net::Async::ZMQ->new;
+
+  $zmq->add_child(
+    Net::Async::ZMQ::Socket->new(
+      socket => $client_socket,
+      on_read_ready => sub {
+        while ( my $recvmsg = zmq_recvmsg( $client_socket, ZMQ_NOBLOCK ) ) {
+          my $msg = zmq_msg_data($recvmsg);
+          zmq_sendmsg( $client_socket, "hello @{[ $counter++ ]}" );
+        }
+      },
+    )
+  );
+
+  $loop->add( $zmq );
+
+  $loop->run;
+
+=head1 DESCRIPTION
+
+A subclass of L<IO::Async::Notifier> that can hold ZMQ sockets
+that are provided by L<Net::Async::ZMQ::Socket>.
+
+=cut
