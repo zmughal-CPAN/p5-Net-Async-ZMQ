@@ -1,0 +1,40 @@
+language: perl
+cache:
+  directories:
+    # local::lib caching
+    - $HOME/perl5
+addons:
+  apt:
+    packages:
+      - libzmq3-dev
+      - aspell     # for dzil Test::PodSpelling
+      - aspell-en  # for dzil Test::PodSpelling
+matrix:
+  include:
+    - perl: "5.16"
+      os: linux
+      dist: trusty
+      sudo: false
+    - perl: "5.18"
+      env: COVERAGE=1   # enables coverage+coveralls reporting
+      os: linux
+      dist: trusty
+      sudo: false
+    - perl: "5.20"
+      os: linux
+      dist: trusty
+      sudo: false
+    - perl: "blead"
+      os: linux
+      dist: trusty
+      sudo: false
+    - perl: "system"
+      os: osx
+  allow_failures:
+    - perl: blead       # ignore failures for blead perl
+sudo: false             # faster builds as long as you don't need sudo access
+before_install:
+  - export DEVOPS_BRANCH="master"
+  - export ALT_ALIEN_ZMQ_BRANCH="install-script-for-other-ci"
+  - export RENARD_DEVOPS_HOOK_PRE_PERL="curl https://raw.githubusercontent.com/zmughal/p5-Alt-Alien-ZMQ-Alien-ZMQ-latest/$ALT_ALIEN_ZMQ_BRANCH/maint/install-zmq-libzmq.pl | perl - -- Alt::Alien::ZMQ::Alien::ZMQ::latest ZMQ::LibZMQ3 ZMQ::LibZMQ4"
+  - eval "$(curl https://raw.githubusercontent.com/project-renard/devops/$DEVOPS_BRANCH/script/helper.pl | perl -- | awk '/^#START/,/^#END/ { print > "/dev/stdout"; next } { print > "/dev/stderr"}' )"
