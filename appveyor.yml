@@ -34,4 +34,7 @@ build_script:
   - "cd .."
 
 test_script:
+  - perl -MAlien::ZMQ::latest -E "say Alien::ZMQ::latest->bin_dir" > %TMPDIR%\alien-zmq-latest-bin.txt
+  - set /P ALIEN_ZMQ_LATEST_PATH=<%TMPDIR%\alien-zmq-latest-bin.txt
+  - path %ALIEN_ZMQ_LATEST_PATH%;%PATH%
   - "dzil test --release --keep-build-dir"
