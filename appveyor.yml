@@ -18,7 +18,7 @@ install:
   - "cpanm Dist::Zilla"
   - "dzil authordeps | cpanm"
 
-  - set ALT_ALIEN_ZMQ_BRANCH=install-script-for-other-ci
+  - set ALT_ALIEN_ZMQ_BRANCH=master
   - cinst curl -y
   - 'cd %APPVEYOR_BUILD_FOLDER% & curl -fsS -o install-zmq-libzmq.pl https://raw.githubusercontent.com/zmughal/p5-Alt-Alien-ZMQ-Alien-ZMQ-latest/%ALT_ALIEN_ZMQ_BRANCH%/maint/install-zmq-libzmq.pl & perl install-zmq-libzmq.pl --notest Alt::Alien::ZMQ::Alien::ZMQ::latest ZMQ::LibZMQ3 ZMQ::LibZMQ4'
 
