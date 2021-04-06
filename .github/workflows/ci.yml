@@ -20,10 +20,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
+        if: matrix.os != 'windows-latest'
         with:
           perl-version: ${{ matrix.perl }}
+      - name: Set up perl (Strawberry)
+        uses: shogo82148/actions-setup-perl@v1
+        if: matrix.os == 'windows-latest'
+        with:
+          distribution: 'strawberry'
+
       - run: perl -V
       - name: Install ZMQ
         if: matrix.os == 'ubuntu-latest'
