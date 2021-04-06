@@ -48,4 +48,16 @@ __END__
 A subclass of L<IO::Async::Notifier> that can hold ZMQ sockets
 that are provided by L<Net::Async::ZMQ::Socket>.
 
+=head1 SEE ALSO
+
+=begin :list
+
+* L<ZMQ::LibZMQ3>
+
+* L<ZMQ::LibZMQ4>
+
+* L<ZMQ::FFI>
+
+=end :list
+
 =cut

@@ -50,6 +50,32 @@ version 0.001
 A subclass of L<IO::Async::Notifier> that can hold ZMQ sockets
 that are provided by L<Net::Async::ZMQ::Socket>.
 
+=head1 EXTENDS
+
+=over 4
+
+=item * L<IO::Async::Notifier>
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<ZMQ::LibZMQ3>
+
+=item *
+
+L<ZMQ::LibZMQ4>
+
+=item *
+
+L<ZMQ::FFI>
+
+=back
+
 =head1 AUTHOR
 
 Zakariyya Mughal <zmughal@cpan.org>
