@@ -75,7 +75,7 @@ sub _zmq_get_io_handle {
 		: $self->{_stash}->get_symbol('&zmq_getsockopt');
 	my $zmq_getsockopt_uint64 =
 		$self->{_zmq_class} eq 'ZMQ::FFI'
-		? sub { my ($socket, $opt) = @_; $socket->get( $opt, 'uint64' ) }
+		? sub { my ($socket, $opt) = @_; $socket->get( $opt, 'uint64_t' ) }
 		: $self->{_stash}->get_symbol('&zmq_getsockopt_uint64');
 
 	my $fd;

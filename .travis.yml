@@ -36,5 +36,5 @@ sudo: false             # faster builds as long as you don't need sudo access
 before_install:
   - export DEVOPS_BRANCH="master"
   - export ALT_ALIEN_ZMQ_BRANCH="master"
-  - export RENARD_DEVOPS_HOOK_PRE_PERL="curl https://raw.githubusercontent.com/zmughal-p5CPAN/p5-Alt-Alien-ZMQ-Alien-ZMQ-latest/$ALT_ALIEN_ZMQ_BRANCH/maint/install-zmq-libzmq.pl | perl - -- Alt::Alien::ZMQ::Alien::ZMQ::latest ZMQ::LibZMQ3 ZMQ::LibZMQ4"
+  - export RENARD_DEVOPS_HOOK_PRE_PERL="curl https://raw.githubusercontent.com/zmughal-CPAN/p5-Alt-Alien-ZMQ-Alien-ZMQ-latest/$ALT_ALIEN_ZMQ_BRANCH/maint/install-zmq-libzmq.pl | perl - -- Alt::Alien::ZMQ::Alien::ZMQ::latest ZMQ::LibZMQ3 ZMQ::LibZMQ4"
   - eval "$(curl https://raw.githubusercontent.com/project-renard/devops/$DEVOPS_BRANCH/script/helper.pl | perl -- | awk '/^#START/,/^#END/ { print > "/dev/stdout"; next } { print > "/dev/stderr"}' )"

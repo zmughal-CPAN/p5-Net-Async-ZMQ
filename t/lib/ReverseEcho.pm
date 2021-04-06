@@ -147,7 +147,13 @@ package
 		my $self = bless {}, $class;
 		$self->{_stash} = Package::Stash->new($zmq_class);
 
-		$self->{init} = $self->{_stash}->get_symbol('&new');
+		my $orig_init = $self->{_stash}->get_symbol('&new');
+		$self->{init} = sub {
+			my @extra = $^O eq 'MSWin32'
+				? ( soname => 'libzmq.dll' )
+				: ();
+			$orig_init->( $zmq_class, @_, @extra );
+		};
 		$self->{msg_data} = sub { $_[0] };
 
 		my %map_fun = (
