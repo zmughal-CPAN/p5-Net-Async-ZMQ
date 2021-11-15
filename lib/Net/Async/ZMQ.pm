@@ -15,7 +15,11 @@ __END__
   use Net::Async::ZMQ::Socket;
 
   use ZMQ::LibZMQ3;  # or ZMQ::LibZMQ4
-  use ZMQ::Constants qw(ZMQ_REQ ZMQ_NOBLOCK);
+  use ZMQ::Constants qw(
+    ZMQ_REQ
+    ZMQ_NOBLOCK
+    ZMQ_EVENTS ZMQ_POLLIN
+  );
 
   my $loop = IO::Async::Loop->new;
 
@@ -27,11 +31,14 @@ __END__
 
   my $zmq = Net::Async::ZMQ->new;
 
+  zmq_sendmsg( $client_socket, "initial message" );
+
   $zmq->add_child(
     Net::Async::ZMQ::Socket->new(
       socket => $client_socket,
       on_read_ready => sub {
-        while ( my $recvmsg = zmq_recvmsg( $client_socket, ZMQ_NOBLOCK ) ) {
+        while ( zmq_getsockopt( $client_socket, ZMQ_EVENTS ) & ZMQ_POLLIN ) {
+          my $recvmsg = zmq_recvmsg( $client_socket, ZMQ_NOBLOCK );
           my $msg = zmq_msg_data($recvmsg);
           zmq_sendmsg( $client_socket, "hello @{[ $counter++ ]}" );
         }
@@ -48,7 +55,7 @@ __END__
 A subclass of L<IO::Async::Notifier> that can hold ZMQ sockets
 that are provided by L<Net::Async::ZMQ::Socket>.
 
-=head1 SEE ALSO
+Supports sockets from the following libraries:
 
 =begin :list
 
@@ -57,6 +64,16 @@ that are provided by L<Net::Async::ZMQ::Socket>.
 * L<ZMQ::LibZMQ4>
 
 * L<ZMQ::FFI>
+
+=end :list
+
+=head1 SEE ALSO
+
+=begin :list
+
+* L<C<ZMQ_FD> in C<zmq_getsockopt>|http://api.zeromq.org/master:zmq-getsockopt>
+
+* L<ZeroMQ - Edge Triggered Notification|https://funcptr.net/2012/09/10/zeromq---edge-triggered-notification/>
 
 =end :list
 
