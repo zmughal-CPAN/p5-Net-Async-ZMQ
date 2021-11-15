@@ -49,7 +49,8 @@ sub run {
 		Net::Async::ZMQ::Socket->new(
 			socket => $client_socket,
 			on_read_ready => sub {
-				while ( my $recvmsg = eval{ $shim->{recvmsg}( $client_socket, $shim->{ZMQ_NOBLOCK} ) } ) {
+				while ( $shim->has_pollin( $client_socket ) ) {
+					my $recvmsg = $shim->{recvmsg}( $client_socket, $shim->{ZMQ_NOBLOCK} );
 					my $msg = $shim->{msg_data}($recvmsg);
 					$shim->{sendmsg}( $client_socket, "hello @{[ $counter++ ]}" );
 					if( $counter == $n_msgs + 1 ) {
@@ -64,7 +65,8 @@ sub run {
 		Net::Async::ZMQ::Socket->new(
 			socket => $server_socket,
 			on_read_ready => sub {
-				while ( my $recvmsg = eval { $shim->{recvmsg}( $server_socket, $shim->{ZMQ_NOBLOCK} ) } ) {
+				while ( $shim->has_pollin( $server_socket ) ) {
+					my $recvmsg = $shim->{recvmsg}( $server_socket, $shim->{ZMQ_NOBLOCK} );
 					my $msg = $shim->{msg_data}($recvmsg);
 					my $r_msg = reverse $msg;
 					$shim->{sendmsg}( $server_socket, $r_msg );
@@ -99,7 +101,9 @@ use constant SHIM_FUNCS => [ qw(
 ) ];
 
 use constant SHIM_CONSTANTS => [ qw(
-	ZMQ_REP ZMQ_REQ ZMQ_NOBLOCK
+	ZMQ_REP ZMQ_REQ
+	ZMQ_NOBLOCK
+	ZMQ_EVENTS ZMQ_POLLIN
 ) ];
 
 package
@@ -118,7 +122,7 @@ package
 		my $self = bless {}, $class;
 		$self->{_stash} = Package::Stash->new($zmq_class);
 
-		for my $fun (@{ ReverseEcho::SHIM_FUNCS() }) {
+		for my $fun (@{ ReverseEcho::SHIM_FUNCS() }, qw(zmq_getsockopt)) {
 			my $fun_no_prefix = $fun =~ s/^zmq_//r;
 			$self->{$fun_no_prefix} = $self->{_stash}->get_symbol("&${fun}");
 		}
@@ -129,6 +133,11 @@ package
 		}
 
 		$self;
+	}
+
+	sub has_pollin {
+		my ($self, $socket) = @_;
+		$self->{getsockopt}($socket, $self->{ZMQ_EVENTS} ) & $self->{ZMQ_POLLIN};
 	}
 }
 
@@ -182,6 +191,12 @@ package
 		}
 
 		$self;
+	}
+
+	sub has_pollin {
+		my ($self, $socket) = @_;
+		return 0 if $socket->socket_ptr == -1;
+		$socket->has_pollin;
 	}
 }
 
